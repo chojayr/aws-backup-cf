@@ -1,0 +1,103 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create AWS Backup Plan and Backup Selection
+Parameters:
+# Backup
+  BackupPlanName:
+    Type: String
+    Description: AWS Backup name for BackupPlan
+  BackupSelectionName:
+    Type: String
+    Description: AWS Backup name for BackupSelection
+# Backup Rules
+  BackupPolicy:
+    Type: String
+    Description: AWS Backup frequency choose between backup once, twice, thrice or four times a day
+    AllowedValues:
+      - BackupOnceDaily
+      - BackupTwiceDaily 
+      - BackupThriceDaily
+      - BackupFourTimesDaily
+  BackupDefaultRole:
+    Type: String
+    Description: IAM service role for the BackupSelection
+  DeleteAfterDays:
+    Type: Number
+    Description: Number of days before the backup will be deleted
+# Tags
+  Team:
+    Type: String
+    Description: Team name that own's the backup, this will be use for tag 
+  Email:
+    Type: String
+    Description: Team email address
+
+Conditions:
+  OnceDaily: !Equals [ !Ref BackupPolicy, "BackupOnceDaily" ]
+  TwiceDaily: !Equals [ !Ref BackupPolicy, "BackupTwiceDaily" ]
+  ThriceDaily: !Equals [ !Ref BackupPolicy, "BackupThriceDaily" ]
+  FourTimesDaily: !Equals [ !Ref BackupPolicy, "BackupFourTimesDaily" ]
+  
+Resources:
+  StorageBackupPlan:
+    Type: AWS::Backup::BackupPlan
+    Properties:
+      BackupPlan: 
+        BackupPlanName: !Ref BackupPlanName
+        BackupPlanRule:
+          - 
+            RuleName: !Ref BackupPolicy
+            TargetBackupVault: Default
+            #ScheduleExpression: !If [ TwiceDaily, "cron(0 0/12 * * ? *)",  "cron(0 1 * * ? *)"]
+            ScheduleExpression: 
+              !If
+                [ OnceDaily, "cron(0 1 * * ? *)",
+                !If
+                  [ TwiceDaily, "cron(0 0/12 * * ? *)",
+                  !If 
+                    [ ThriceDaily, "cron(0 0/8 * * ? *)", "cron(0 0/6 * * ? *)" ]
+                  ]
+                 ]
+            Lifecycle: {
+                DeleteAfterDays: !Ref DeleteAfterDays
+            }
+            RecoveryPointTags: {
+              "Team": !Ref Team,
+              "Email": !Ref Email
+            }
+      BackupPlanTags: {
+        "Team": !Ref Team,
+        "Email": !Ref Email
+      }
+
+  StorageBackupSelectionByTags:
+    Type: AWS::Backup::BackupSelection
+    DependsOn: StorageBackupPlan
+    Properties:
+      BackupSelection: 
+        SelectionName: !Ref BackupSelectionName
+        IamRoleArn: !Ref BackupDefaultRole
+        ListOfTags:
+          - 
+            ConditionType: "STRINGEQUALS"
+            ConditionKey: "Backup"
+            ConditionValue: !Ref BackupSelectionName
+      BackupPlanId: !Ref StorageBackupPlan
+ 
+
+Outputs:
+  BackupSelectionName:
+    Description: Tag:Value you need to put on your resource along with the Tag:Key Backup
+    Value: !Ref BackupSelectionName
+  BackupSelectionId:
+    Description: Backup Selection ID
+    Value: !Ref StorageBackupSelectionByTags
+  BackupPlanArn:
+    Description: BackupPlan Arn
+    Value: !GetAtt StorageBackupPlan.BackupPlanArn
+  BackupPlanId:
+    Description: BackupPlan ID
+    Value: !Ref StorageBackupPlan
+  BackupPlanVersionId:
+    Description: BackupPlan Version ID
+    Value: !GetAtt StorageBackupPlan.VersionId

@@ -1,0 +1,30 @@
+[
+    {
+        "ParameterKey": "BackupPlanName",
+        "ParameterValue": "daily-backup-sample"
+    },
+    {
+        "ParameterKey": "BackupSelectionName",
+        "ParameterValue": "daily-backup"
+    },
+    {
+        "ParameterKey": "Team",
+        "ParameterValue": "AppTeamSample"
+    },
+    {
+        "ParameterKey": "Email",
+        "ParameterValue": "team-email@yourdomain.com"
+    },
+    {
+        "ParameterKey": "BackupPolicy",
+        "ParameterValue": "BackupOnceDaily"
+    },
+    {
+        "ParameterKey": "BackupDefaultRole",
+        "ParameterValue": "arn:aws:iam::1122333344:role/service-role/AWSBackupDefaultServiceRole"
+    },
+    {
+        "ParameterKey": "DeleteAfterDays",
+        "ParameterValue": 30
+    }
+]
