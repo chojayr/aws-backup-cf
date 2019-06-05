@@ -1,5 +1,13 @@
 [
     {
+        "ParameterKey": "CreateNewBackupVault",
+        "ParameterValue": "true"
+    },
+    {
+        "ParameterKey": "BackupVaultName",
+        "ParameterValue": "mybackup-vault-sample"
+    },
+    {
         "ParameterKey": "BackupPlanName",
         "ParameterValue": "daily-backup-sample"
     },

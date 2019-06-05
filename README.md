@@ -1,6 +1,6 @@
 ## aws-backup-cf
 
-A CloudFormation template sample to build AWS Backup(BackupPlan and BackupSelection) just for reference
+A CloudFormation template sample to build AWS Backup(BackupVault, BackupPlan and BackupSelection) just for reference
 
 * aws-backup.yaml
 * sample-params.json
@@ -8,6 +8,8 @@ A CloudFormation template sample to build AWS Backup(BackupPlan and BackupSelect
 #### Sample Parameters 
 
 ```
+CreateNewBackupVault: true
+BackupVaultName: mybackup-vault-sample
 BackupPlanName: daily-backup-sample
 BackupSelectionName: daily-backup
 Team: appteam:test
@@ -27,7 +29,7 @@ $ aws cloudformation create-stack --stack-name <stack name> --template-body file
 
 NOTE:
 
-* This template does not include the creation of the BackupVault, It will use the Default BackupVault 
+* This template does include the creation of new BackupVault if desired just set the "CreateNewBackupVault" to "true" or use the existing BackupVault e.g. "Default",  
 
 * Add the tag "Backup: daily-backup" to your resources so the AWS Backup can identify the target resource it needs to backup
 

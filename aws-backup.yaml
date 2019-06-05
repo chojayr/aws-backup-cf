@@ -3,6 +3,13 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Create AWS Backup Plan and Backup Selection
 Parameters:
 # Backup
+  CreateNewBackupVault:
+    Type: String
+    AllowedValues:
+      - true
+      - false
+  BackupVaultName:
+    Type: String
   BackupPlanName:
     Type: String
     Description: AWS Backup name for BackupPlan
@@ -33,12 +40,23 @@ Parameters:
     Description: Team email address
 
 Conditions:
+  CreateNewVault: !Equals [ !Ref CreateNewBackupVault, "true" ]
   OnceDaily: !Equals [ !Ref BackupPolicy, "BackupOnceDaily" ]
   TwiceDaily: !Equals [ !Ref BackupPolicy, "BackupTwiceDaily" ]
   ThriceDaily: !Equals [ !Ref BackupPolicy, "BackupThriceDaily" ]
   FourTimesDaily: !Equals [ !Ref BackupPolicy, "BackupFourTimesDaily" ]
   
 Resources:
+  StorageBackupVault:
+    Type: AWS::Backup::BackupVault
+    Condition: CreateNewVault
+    Properties:
+      BackupVaultName: !Ref BackupVaultName
+      BackupVaultTags: {
+        "Team": !Ref Team,
+        "Email": !Ref Email
+      }
+
   StorageBackupPlan:
     Type: AWS::Backup::BackupPlan
     Properties:
@@ -47,8 +65,7 @@ Resources:
         BackupPlanRule:
           - 
             RuleName: !Ref BackupPolicy
-            TargetBackupVault: Default
-            #ScheduleExpression: !If [ TwiceDaily, "cron(0 0/12 * * ? *)",  "cron(0 1 * * ? *)"]
+            TargetBackupVault: !If [ CreateNewVault, !Ref StorageBackupVault, !Ref BackupVaultName ]
             ScheduleExpression: 
               !If
                 [ OnceDaily, "cron(0 1 * * ? *)",
@@ -92,6 +109,10 @@ Outputs:
   BackupSelectionId:
     Description: Backup Selection ID
     Value: !Ref StorageBackupSelectionByTags
+  BackupVaultArn:
+    Description: Backup Vault ARN
+    Condition: CreateNewVault
+    Value: !GetAtt StorageBackupVault.BackupVaultArn
   BackupPlanArn:
     Description: BackupPlan Arn
     Value: !GetAtt StorageBackupPlan.BackupPlanArn
